@@ -1,0 +1,22 @@
+[package]
+name = "actix-msgpack"
+version = "0.0.0"
+authors = ["ym-project <ym-project@protonmail.com>"]
+edition = "2021"
+rust-version = "1.56"
+description = "Msgpack payload extractor for Actix Web"
+repository = "https://github.com/ym-project/actix-msgpack.git"
+license = "MIT"
+keywords = ["actix", "web", "actix-web", "msgpack", "protocol", "message", "pack"]
+
+[dependencies]
+actix-web = { version = "4", default-features = false }
+derive_more = { version = "0.99.17", default-features = false, features = ["display"] }
+futures-util = { version = "0.3.28", default-features = false }
+mime = "0.3.17"
+rmp-serde = "1.1.2"
+serde = { version = "1.0.188", default-features = false }
+
+[dev-dependencies]
+actix-web = { version = "4", default-features = false, features = ["macros"] }
+serde = { version = "1.0.188", features = ["derive"] }
