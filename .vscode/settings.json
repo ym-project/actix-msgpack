@@ -1,0 +1,14 @@
+{
+	"[git-commit]": {
+		"editor.rulers": [72, 100]
+	},
+	"git.inputValidationLength": 100,
+	"git.inputValidationSubjectLength": 72,
+
+	"editor.tabSize": 4,
+	"editor.insertSpaces": false,
+
+	"files.insertFinalNewline": true,
+
+	"conventionalCommits.emojiFormat": "emoji"
+}

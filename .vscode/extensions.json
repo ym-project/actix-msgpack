@@ -1,0 +1,8 @@
+{
+	"recommendations": [
+		"tamasfe.even-better-toml",
+		"vivaxy.vscode-conventional-commits",
+		"rust-lang.rust-analyzer",
+		"matklad.rust-analyzer",
+	]
+}
