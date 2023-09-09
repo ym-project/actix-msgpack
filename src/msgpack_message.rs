@@ -1,6 +1,7 @@
 use crate::MsgPackError;
 use crate::DEFAULT_PAYLOAD_LIMIT;
 use actix_web::dev::Payload;
+use actix_web::error::PayloadError;
 use actix_web::http::header::CONTENT_LENGTH;
 use actix_web::web::BytesMut;
 use actix_web::{HttpMessage, HttpRequest};
@@ -10,6 +11,7 @@ use futures_util::FutureExt;
 use mime::APPLICATION_MSGPACK;
 use serde::de::DeserializeOwned;
 use std::future::Future;
+use std::io;
 use std::pin::Pin;
 use std::task::{self, Poll};
 
@@ -92,6 +94,12 @@ impl<T: DeserializeOwned + 'static> Future for MsgPackMessage<T> {
 					} else {
 						body.extend_from_slice(&chunk);
 					}
+				}
+
+				if body.len() == 0 {
+					return Err(MsgPackError::Payload(PayloadError::Incomplete(Some(
+						io::Error::new(io::ErrorKind::InvalidData, "payload is empty"),
+					))));
 				}
 
 				Ok(rmp_serde::from_slice::<T>(&body)?)
