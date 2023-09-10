@@ -8,6 +8,11 @@ description = "Msgpack payload extractor for Actix Web"
 repository = "https://github.com/ym-project/actix-msgpack/tree/v4.git"
 license = "MIT"
 keywords = ["actix", "web", "actix-web", "msgpack", "protocol", "message", "pack"]
+exclude = [
+	".vscode",
+	".gitignore",
+	"rustfmt.toml",
+]
 
 [dependencies]
 actix-web = { version = "4", default-features = false }
