@@ -91,7 +91,9 @@ impl<T: DeserializeOwned + 'static> Future for MsgPackMessage<T> {
 
 				while let Some(item) = stream.next().await {
 					let chunk = item?;
-					if (body.len() + chunk.len()) > limit {
+					let current_length = body.len() + chunk.len();
+
+					if current_length > length || current_length > limit {
 						return Err(MsgPackError::Overflow);
 					} else {
 						body.extend_from_slice(&chunk);
