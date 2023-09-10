@@ -7,7 +7,7 @@ rust-version = "1.56"
 description = "Msgpack payload extractor for Actix Web"
 repository = "https://github.com/ym-project/actix-msgpack/tree/v4.git"
 license = "MIT"
-keywords = ["actix", "web", "actix-web", "msgpack", "protocol", "message", "pack"]
+keywords = ["actix", "web", "actix-web", "msgpack", "protocol"]
 exclude = [
 	".vscode",
 	".gitignore",
