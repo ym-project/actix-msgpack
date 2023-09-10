@@ -74,18 +74,20 @@ impl<T: DeserializeOwned + 'static> Future for MsgPackMessage<T> {
 		}
 
 		let limit = self.limit;
+		let length = match self.length.take() {
+			Some(len) => len,
+			None => 0,
+		};
 
-		if let Some(len) = self.length.take() {
-			if len > limit {
-				return Poll::Ready(Err(MsgPackError::Overflow));
-			}
+		if length > limit {
+			return Poll::Ready(Err(MsgPackError::Overflow));
 		}
 
 		let mut stream = self.stream.take().expect("MsgPackMessage could not be used second time");
 
 		self.fut = Some(
 			async move {
-				let mut body = BytesMut::with_capacity(8192);
+				let mut body = BytesMut::with_capacity(length);
 
 				while let Some(item) = stream.next().await {
 					let chunk = item?;
