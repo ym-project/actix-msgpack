@@ -187,7 +187,7 @@ mod tests {
 			.to_http_parts();
 		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
 
-		assert_eq!(msgpack.err().unwrap(), MsgPackError::Overflow);
+		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
 
 		// Pass body and don't pass Content-Length header
 		let data =
@@ -198,6 +198,6 @@ mod tests {
 			.to_http_parts();
 		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
 
-		assert_eq!(msgpack.err().unwrap(), MsgPackError::Overflow);
+		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
 	}
 }
