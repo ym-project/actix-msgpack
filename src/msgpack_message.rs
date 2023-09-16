@@ -74,7 +74,7 @@ impl<T: DeserializeOwned + 'static> Future for MsgPackMessage<T> {
 		}
 
 		let limit = self.limit;
-		
+
 		if let Some(len) = self.length.take() {
 			if len > limit {
 				return Poll::Ready(Err(MsgPackError::Overflow));
