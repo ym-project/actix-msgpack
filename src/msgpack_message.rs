@@ -97,7 +97,7 @@ impl<T: DeserializeOwned + 'static> Future for MsgPackMessage<T> {
 					}
 				}
 
-				if body.len() == 0 {
+				if body.is_empty() {
 					return Err(MsgPackError::Payload(PayloadError::Incomplete(Some(
 						io::Error::new(io::ErrorKind::InvalidData, "payload is empty"),
 					))));
