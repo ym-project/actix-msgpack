@@ -3,19 +3,23 @@ mod msgpack;
 mod msgpack_config;
 mod msgpack_error;
 mod msgpack_message;
+mod msgpack_response_builder;
 
 pub(crate) use constants::DEFAULT_PAYLOAD_LIMIT;
 pub use msgpack::MsgPack;
 pub use msgpack_config::MsgPackConfig;
 pub use msgpack_error::MsgPackError;
 pub use msgpack_message::MsgPackMessage;
+pub use msgpack_response_builder::MsgPackResponseBuilder;
 
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use actix_web::http::header;
+	use actix_web::body::MessageBody;
+	use actix_web::http::{header, StatusCode};
 	use actix_web::test::TestRequest;
 	use actix_web::web::Bytes;
+	use actix_web::{HttpRequest, HttpResponse};
 	use mime::{APPLICATION_JSON, APPLICATION_MSGPACK};
 	use serde::{Deserialize, Serialize};
 
@@ -199,5 +203,41 @@ mod tests {
 		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
 
 		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
+	}
+
+	#[actix_web::test]
+	async fn check_responses() {
+		// Response with msgpack_named responder
+		async fn named_service(_: HttpRequest) -> HttpResponse {
+			let payload = Data { payload: true };
+			HttpResponse::Ok().msgpack_named(payload)
+		}
+
+		let request = TestRequest::post()
+			.uri("/")
+			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
+			.to_http_request();
+		let response = named_service(request).await;
+
+		assert_eq!(response.status(), StatusCode::OK);
+		assert_eq!(
+			response.into_body().try_into_bytes().unwrap(),
+			vec![0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]
+		);
+
+		// Response with msgpack responder
+		async fn service(_: HttpRequest) -> HttpResponse {
+			let payload = Data { payload: true };
+			HttpResponse::Ok().msgpack(payload)
+		}
+
+		let request = TestRequest::post()
+			.uri("/")
+			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
+			.to_http_request();
+		let response = service(request).await;
+
+		assert_eq!(response.status(), StatusCode::OK);
+		assert_eq!(response.into_body().try_into_bytes().unwrap(), vec![0x91, 0xc3]);
 	}
 }
