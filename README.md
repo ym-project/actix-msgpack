@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-#### You can also set custom limit (default is 256kb):
+#### You can set custom limit (default is 256kb):
 ```rust
 use actix_msgpack::{MsgPackConfig};
 
@@ -55,6 +55,24 @@ async fn main() -> std::io::Result<()> {
     .bind(("127.0.0.1", 8080))?
     .run()
     .await
+}
+```
+
+#### You can use responders:
+There are 2 responders:
+- `msgpack_named` - responder with field names (most likely you are looking for this option)
+- `msgpack` - responder with compact representation
+
+```rust
+#[derive(Serialize)]
+struct Data {
+    payload: bool,
+}
+
+#[post("/")]
+async fn index(data: MsgPack<Data>) -> HttpResponse {
+    let payload = Data { payload: true };
+    HttpResponse::Ok().msgpack_named(payload)
 }
 ```
 
