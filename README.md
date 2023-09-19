@@ -1,6 +1,6 @@
 # actix-msgpack
 
-> Msgpack payload extractor for [Actix Web](https://actix.rs).
+> [Msgpack](https://msgpack.org) payload extractor for [Actix Web](https://actix.rs).
 
 ## Installation
 
@@ -64,13 +64,15 @@ There are 2 responders:
 - `msgpack` - responder with compact representation
 
 ```rust
+use actix_msgpack::{MsgPackResponseBuilder};
+
 #[derive(Serialize)]
 struct Data {
     payload: bool,
 }
 
 #[post("/")]
-async fn index(data: MsgPack<Data>) -> HttpResponse {
+async fn index() -> HttpResponse {
     let payload = Data { payload: true };
     HttpResponse::Ok().msgpack_named(payload)
 }
