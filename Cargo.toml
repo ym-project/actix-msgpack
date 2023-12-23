@@ -9,6 +9,7 @@ repository = "https://github.com/ym-project/actix-msgpack/tree/v4"
 license = "MIT"
 keywords = ["actix", "web", "actix-web", "msgpack", "protocol"]
 exclude = [
+	".github",
 	".vscode",
 	".gitignore",
 	"rustfmt.toml",
