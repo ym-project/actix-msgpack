@@ -1,6 +1,6 @@
 [package]
 name = "actix-msgpack"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["ym-project <ym-project@protonmail.com>"]
 edition = "2021"
 rust-version = "1.56"
