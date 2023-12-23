@@ -15,7 +15,7 @@ cargo add actix-msgpack
 ## Example
 
 ```rust
-use actix_msgpack::{MsgPack};
+use actix_msgpack::MsgPack;
 use actix_web::{post, App, HttpResponse, HttpServer, Responder};
 use serde::Deserialize;
 
@@ -42,7 +42,7 @@ async fn main() -> std::io::Result<()> {
 
 #### You can set custom limit (default is 256kb):
 ```rust
-use actix_msgpack::{MsgPackConfig};
+use actix_msgpack::MsgPackConfig;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -58,13 +58,10 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-#### You can use responders:
-There are 2 responders:
-- `msgpack_named` - responder with field names (most likely you are looking for this option)
-- `msgpack` - responder with compact representation
+#### You can use responder:
 
 ```rust
-use actix_msgpack::{MsgPackResponseBuilder};
+use actix_msgpack::MsgPackResponseBuilder;
 
 #[derive(Serialize)]
 struct Data {
@@ -74,7 +71,7 @@ struct Data {
 #[post("/")]
 async fn index() -> HttpResponse {
     let payload = Data { payload: true };
-    HttpResponse::Ok().msgpack_named(payload)
+    HttpResponse::Ok().msgpack(payload)
 }
 ```
 

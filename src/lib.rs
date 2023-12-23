@@ -207,24 +207,6 @@ mod tests {
 
 	#[actix_web::test]
 	async fn check_responses() {
-		// Response with msgpack_named responder
-		async fn named_service(_: HttpRequest) -> HttpResponse {
-			let payload = Data { payload: true };
-			HttpResponse::Ok().msgpack_named(payload)
-		}
-
-		let request = TestRequest::post()
-			.uri("/")
-			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
-			.to_http_request();
-		let response = named_service(request).await;
-
-		assert_eq!(response.status(), StatusCode::OK);
-		assert_eq!(
-			response.into_body().try_into_bytes().unwrap(),
-			vec![0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]
-		);
-
 		// Response with msgpack responder
 		async fn service(_: HttpRequest) -> HttpResponse {
 			let payload = Data { payload: true };
@@ -238,6 +220,9 @@ mod tests {
 		let response = service(request).await;
 
 		assert_eq!(response.status(), StatusCode::OK);
-		assert_eq!(response.into_body().try_into_bytes().unwrap(), vec![0x91, 0xc3]);
+		assert_eq!(
+			response.into_body().try_into_bytes().unwrap(),
+			vec![0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]
+		);
 	}
 }
