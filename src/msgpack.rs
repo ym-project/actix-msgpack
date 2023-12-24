@@ -5,7 +5,6 @@ use super::MsgPackMessage;
 use actix_web::body::BoxBody;
 use actix_web::dev::Payload;
 use actix_web::error::Error;
-use actix_web::web::Bytes;
 use actix_web::HttpResponse;
 use actix_web::{FromRequest, HttpRequest, Responder};
 use futures_util::future::LocalBoxFuture;
@@ -80,7 +79,7 @@ impl<T: Serialize> Responder for MsgPack<T> {
 			Ok(body) => {
 				match HttpResponse::Ok()
 					.content_type(APPLICATION_MSGPACK)
-					.message_body(Bytes::from(body))
+					.message_body(body)
 				{
 					Ok(response) => response.map_into_boxed_body(),
 					Err(err) => HttpResponse::from_error(err),
