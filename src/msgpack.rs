@@ -1,12 +1,18 @@
 use super::constants::DEFAULT_PAYLOAD_LIMIT;
 use super::MsgPackConfig;
+use super::MsgPackError;
 use super::MsgPackMessage;
+use actix_web::body::BoxBody;
 use actix_web::dev::Payload;
 use actix_web::error::Error;
-use actix_web::{FromRequest, HttpRequest};
+use actix_web::web::Bytes;
+use actix_web::HttpResponse;
+use actix_web::{FromRequest, HttpRequest, Responder};
 use futures_util::future::LocalBoxFuture;
 use futures_util::FutureExt;
+use mime::APPLICATION_MSGPACK;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
@@ -63,5 +69,24 @@ where
 				Ok(item) => Ok(MsgPack(item)),
 			})
 			.boxed_local()
+	}
+}
+
+impl<T: Serialize> Responder for MsgPack<T> {
+	type Body = BoxBody;
+
+	fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
+		match rmp_serde::to_vec_named(&self.0) {
+			Ok(body) => {
+				match HttpResponse::Ok()
+					.content_type(APPLICATION_MSGPACK)
+					.message_body(Bytes::from(body))
+				{
+					Ok(response) => response.map_into_boxed_body(),
+					Err(err) => HttpResponse::from_error(err),
+				}
+			},
+			Err(err) => HttpResponse::from_error(MsgPackError::Serialize(err)),
+		}
 	}
 }
