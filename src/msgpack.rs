@@ -77,10 +77,7 @@ impl<T: Serialize> Responder for MsgPack<T> {
 	fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
 		match rmp_serde::to_vec_named(&self.0) {
 			Ok(body) => {
-				match HttpResponse::Ok()
-					.content_type(APPLICATION_MSGPACK)
-					.message_body(body)
-				{
+				match HttpResponse::Ok().content_type(APPLICATION_MSGPACK).message_body(body) {
 					Ok(response) => response.map_into_boxed_body(),
 					Err(err) => HttpResponse::from_error(err),
 				}
