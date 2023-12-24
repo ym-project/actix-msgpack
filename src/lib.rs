@@ -19,7 +19,7 @@ mod tests {
 	use actix_web::http::{header, StatusCode};
 	use actix_web::test::TestRequest;
 	use actix_web::web::Bytes;
-	use actix_web::{HttpRequest, HttpResponse};
+	use actix_web::{HttpRequest, HttpResponse, Responder};
 	use mime::{APPLICATION_JSON, APPLICATION_MSGPACK};
 	use serde::{Deserialize, Serialize};
 
@@ -218,6 +218,22 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.to_http_request();
 		let response = service(request).await;
+
+		assert_eq!(response.status(), StatusCode::OK);
+		assert_eq!(
+			response.into_body().try_into_bytes().unwrap(),
+			vec![0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]
+		);
+	}
+
+	#[actix_web::test]
+	async fn check_responder() {
+		// Pass correct payload
+		let request = TestRequest::default().to_http_request();
+		let payload = MsgPack(Bytes::from_static(&[
+			0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3,
+		]));
+		let response = payload.clone().respond_to(&request);
 
 		assert_eq!(response.status(), StatusCode::OK);
 		assert_eq!(
