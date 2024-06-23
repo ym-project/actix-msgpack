@@ -242,7 +242,7 @@ mod tests {
 		);
 	}
 
-	#[allow(unused_variables, unused_mut)]
+	#[allow(unused_variables, unused_mut, clippy::assertions_on_constants)]
 	#[actix_web::test]
 	async fn check_config_defining() {
 		//
