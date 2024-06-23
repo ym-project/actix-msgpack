@@ -17,9 +17,9 @@ mod tests {
 	use super::*;
 	use actix_web::body::MessageBody;
 	use actix_web::http::{header, StatusCode};
-	use actix_web::test::TestRequest;
+	use actix_web::test::{init_service, TestRequest};
 	use actix_web::web::Bytes;
-	use actix_web::{HttpRequest, HttpResponse, Responder};
+	use actix_web::{App, HttpRequest, HttpResponse, Responder};
 	use mime::{APPLICATION_JSON, APPLICATION_MSGPACK};
 	use serde::{Deserialize, Serialize};
 
@@ -240,5 +240,27 @@ mod tests {
 			response.into_body().try_into_bytes().unwrap(),
 			vec![0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]
 		);
+	}
+
+	#[allow(unused_variables, unused_mut)]
+	#[actix_web::test]
+	async fn check_config_defining() {
+		//
+		// The point of tests is to make sure the compiler doesn't show errors
+		//
+
+		// Create config inside app_data with custom limit
+		let app1 = init_service(App::new().app_data(MsgPackConfig::default().limit(0))).await;
+
+		// Create config with custom limit
+		let config2 = MsgPackConfig::default().limit(0);
+		let app2 = init_service(App::new().app_data(config2)).await;
+
+		// Create mutable config with custom limit
+		let mut config3 = MsgPackConfig::default();
+		config3.limit(0);
+		let app3 = init_service(App::new().app_data(config3)).await;
+
+		assert!(true);
 	}
 }
