@@ -1,19 +1,17 @@
-use crate::MsgPackError;
-use crate::DEFAULT_PAYLOAD_LIMIT;
-use actix_web::dev::Payload;
-use actix_web::error::PayloadError;
-use actix_web::http::header::CONTENT_LENGTH;
-use actix_web::web::BytesMut;
-use actix_web::{HttpMessage, HttpRequest};
-use futures_util::future::LocalBoxFuture;
-use futures_util::stream::StreamExt;
-use futures_util::FutureExt;
+use crate::{MsgPackError, DEFAULT_PAYLOAD_LIMIT};
+use actix_web::{
+	dev::Payload, error::PayloadError, http::header::CONTENT_LENGTH, web::BytesMut, HttpMessage,
+	HttpRequest,
+};
+use futures_util::{future::LocalBoxFuture, stream::StreamExt, FutureExt};
 use mime::APPLICATION_MSGPACK;
 use serde::de::DeserializeOwned;
-use std::future::Future;
-use std::io;
-use std::pin::Pin;
-use std::task::{self, Poll};
+use std::{
+	future::Future,
+	io,
+	pin::Pin,
+	task::{self, Poll},
+};
 
 pub struct MsgPackMessage<T> {
 	limit: usize,

@@ -1,19 +1,15 @@
-use super::constants::DEFAULT_PAYLOAD_LIMIT;
-use super::MsgPackConfig;
-use super::MsgPackError;
-use super::MsgPackMessage;
-use actix_web::body::BoxBody;
-use actix_web::dev::Payload;
-use actix_web::error::Error;
-use actix_web::HttpResponse;
-use actix_web::{FromRequest, HttpRequest, Responder};
-use futures_util::future::LocalBoxFuture;
-use futures_util::FutureExt;
+use crate::MsgPackExtractorFuture;
+
+use super::{MsgPackConfig, MsgPackError, MsgPackMessage, DEFAULT_CONFIG};
+use actix_web::{
+	body::BoxBody, dev::Payload, error::Error, FromRequest, HttpRequest, HttpResponse, Responder,
+};
 use mime::APPLICATION_MSGPACK;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fmt;
-use std::ops::{Deref, DerefMut};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{
+	fmt,
+	ops::{Deref, DerefMut},
+};
 
 pub struct MsgPack<T>(pub T);
 
@@ -54,20 +50,19 @@ where
 	T: 'static,
 {
 	type Error = Error;
-	type Future = LocalBoxFuture<'static, Result<Self, Error>>;
+	type Future = MsgPackExtractorFuture<T>;
 
 	#[inline]
 	fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
-		let data = req.app_data::<MsgPackConfig>();
-		let limit = data.map(|item| item.limit).unwrap_or(DEFAULT_PAYLOAD_LIMIT);
+		let config = req.app_data::<MsgPackConfig>().unwrap_or(&DEFAULT_CONFIG);
+		let limit = config.limit;
+		let err_handler = config.error_handler.clone();
 
-		MsgPackMessage::new(req, payload)
-			.limit(limit)
-			.map(move |res| match res {
-				Err(e) => Err(e.into()),
-				Ok(item) => Ok(MsgPack(item)),
-			})
-			.boxed_local()
+		MsgPackExtractorFuture {
+			req: req.clone(),
+			fut: MsgPackMessage::new(req, payload).limit(limit),
+			err_handler,
+		}
 	}
 }
 

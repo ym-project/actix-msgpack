@@ -1,8 +1,6 @@
-use actix_web::error::PayloadError;
-use actix_web::{HttpResponse, ResponseError};
+use actix_web::{error::PayloadError, HttpResponse, ResponseError};
 use derive_more::Display;
-use rmp_serde::decode::Error as RmpSerdeDecodeError;
-use rmp_serde::encode::Error as RmpSerdeEncodeError;
+use rmp_serde::{decode::Error as RmpSerdeDecodeError, encode::Error as RmpSerdeEncodeError};
 
 #[derive(Debug, Display)]
 pub enum MsgPackError {

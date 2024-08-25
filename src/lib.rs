@@ -1,25 +1,33 @@
 mod constants;
+mod error_handler;
 mod msgpack;
 mod msgpack_config;
 mod msgpack_error;
+mod msgpack_extractor_future;
 mod msgpack_message;
 mod msgpack_response_builder;
 
 pub(crate) use constants::DEFAULT_PAYLOAD_LIMIT;
+pub use error_handler::ErrorHandler;
 pub use msgpack::MsgPack;
 pub use msgpack_config::MsgPackConfig;
+pub(crate) use msgpack_config::DEFAULT_CONFIG;
 pub use msgpack_error::MsgPackError;
+pub use msgpack_extractor_future::MsgPackExtractorFuture;
 pub use msgpack_message::MsgPackMessage;
 pub use msgpack_response_builder::MsgPackResponseBuilder;
 
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use actix_web::body::MessageBody;
-	use actix_web::http::{header, StatusCode};
-	use actix_web::test::TestRequest;
-	use actix_web::web::Bytes;
-	use actix_web::{HttpRequest, HttpResponse, Responder};
+	use actix_web::{
+		body::MessageBody,
+		error::InternalError,
+		http::{header, Method, StatusCode},
+		test::{call_service, init_service, TestRequest},
+		web::{self, Bytes},
+		App, HttpRequest, HttpResponse, Responder,
+	};
 	use mime::{APPLICATION_JSON, APPLICATION_MSGPACK};
 	use serde::{Deserialize, Serialize};
 
@@ -240,5 +248,46 @@ mod tests {
 			response.into_body().try_into_bytes().unwrap(),
 			vec![0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]
 		);
+	}
+
+	#[actix_web::test]
+	async fn check_empty_error_handler() {
+		async fn service(_: MsgPack<Data>) -> HttpResponse {
+			HttpResponse::Ok().finish()
+		}
+
+		let app = init_service(
+			App::new().app_data(MsgPackConfig::default()).route("/", web::post().to(service)),
+		)
+		.await;
+		let request = TestRequest::default()
+			.method(Method::POST)
+			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
+			.to_request();
+		let response = call_service(&app, request).await;
+
+		assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+	}
+
+	#[actix_web::test]
+	async fn check_error_handler() {
+		async fn service(_: MsgPack<Data>) -> HttpResponse {
+			HttpResponse::Ok().finish()
+		}
+
+		let mut config = MsgPackConfig::default();
+		config.error_handler(|err, _req| {
+			InternalError::from_response(err, HttpResponse::NotAcceptable().finish()).into()
+		});
+		let app =
+			init_service(App::new().app_data(config).route("/", web::post().to(service))).await;
+
+		let request = TestRequest::default()
+			.method(Method::POST)
+			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
+			.to_request();
+		let response = call_service(&app, request).await;
+
+		assert_eq!(response.status(), StatusCode::NOT_ACCEPTABLE);
 	}
 }
