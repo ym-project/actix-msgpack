@@ -1,7 +1,5 @@
 use crate::MsgPackError;
-use actix_web::http::header::ContentType;
-use actix_web::web::Bytes;
-use actix_web::{HttpResponse, HttpResponseBuilder};
+use actix_web::{http::header::ContentType, web::Bytes, HttpResponse, HttpResponseBuilder};
 use mime::APPLICATION_MSGPACK;
 use serde::Serialize;
 
