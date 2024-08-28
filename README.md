@@ -40,17 +40,22 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-#### You can set custom limit (default is 256kb):
+#### You can set settings:
 ```rust
 use actix_msgpack::MsgPackConfig;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        let mut msgpack_config = MsgPackConfig::default();
-        msgpack_config.limit(1024); // 1kb
+        let mut config = MsgPackConfig::default();
+        // set max limit in bytes (default is 256kb)
+        config.limit(1024); // 1kb
+        // set error handler
+        config.error_handler(|err, _req| {
+            InternalError::from_response(err, HttpResponse::BadRequest().finish()).into()
+        });
 
-        App::new().app_data(msgpack_config).service(index)
+        App::new().app_data(Data::new(msgpack_config)).service(index)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
