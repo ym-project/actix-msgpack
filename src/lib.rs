@@ -1,4 +1,5 @@
 mod constants;
+mod content_type_handler;
 mod error_handler;
 mod msgpack;
 mod msgpack_config;
@@ -8,6 +9,7 @@ mod msgpack_message;
 mod msgpack_response_builder;
 
 pub(crate) use constants::DEFAULT_PAYLOAD_LIMIT;
+pub use content_type_handler::ContentTypeHandler;
 pub use error_handler::ErrorHandler;
 pub use msgpack::MsgPack;
 pub use msgpack_config::MsgPackConfig;
@@ -54,7 +56,7 @@ mod tests {
 	async fn check_content_type() {
 		// Pass empty Content-Type
 		let (req, mut payload) = TestRequest::default().to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.err().unwrap(), MsgPackError::ContentType);
 
@@ -62,7 +64,7 @@ mod tests {
 		let (req, mut payload) = TestRequest::default()
 			.insert_header((header::CONTENT_TYPE, APPLICATION_JSON))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.err().unwrap(), MsgPackError::ContentType);
 
@@ -70,7 +72,7 @@ mod tests {
 		let (req, mut payload) = TestRequest::default()
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_ne!(msgpack.err().unwrap(), MsgPackError::ContentType);
 	}
@@ -82,7 +84,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.insert_header((header::CONTENT_LENGTH, 0))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).await;
 
 		assert_ne!(msgpack.err().unwrap(), MsgPackError::Overflow);
 
@@ -91,7 +93,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.insert_header((header::CONTENT_LENGTH, DEFAULT_PAYLOAD_LIMIT))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).await;
 
 		assert_ne!(msgpack.err().unwrap(), MsgPackError::Overflow);
 
@@ -100,7 +102,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.insert_header((header::CONTENT_LENGTH, DEFAULT_PAYLOAD_LIMIT + 1))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.err().unwrap(), MsgPackError::Overflow);
 	}
@@ -114,7 +116,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.insert_header((header::CONTENT_LENGTH, LIMIT))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).limit(LIMIT).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).limit(LIMIT).await;
 
 		assert_ne!(msgpack.err().unwrap(), MsgPackError::Overflow);
 
@@ -123,7 +125,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.insert_header((header::CONTENT_LENGTH, LIMIT + 1))
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).limit(LIMIT).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).limit(LIMIT).await;
 
 		assert_eq!(msgpack.err().unwrap(), MsgPackError::Overflow);
 	}
@@ -135,7 +137,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.to_http_parts();
 
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).await;
 
 		assert!(matches!(msgpack.err().unwrap(), MsgPackError::Payload(..)));
 
@@ -146,7 +148,7 @@ mod tests {
 			.insert_header((header::CONTENT_LENGTH, 1))
 			.set_payload(data)
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<()>::new(&req, &mut payload, None).await;
 
 		assert!(matches!(msgpack.err().unwrap(), MsgPackError::Deserialize(..)));
 
@@ -158,7 +160,7 @@ mod tests {
 			.insert_header((header::CONTENT_LENGTH, 10))
 			.set_payload(data)
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.ok().unwrap(), Data { payload: true })
 	}
@@ -173,7 +175,7 @@ mod tests {
 			.insert_header((header::CONTENT_LENGTH, 10))
 			.set_payload(data)
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
 
@@ -185,7 +187,7 @@ mod tests {
 			.insert_header((header::CONTENT_LENGTH, 11))
 			.set_payload(data)
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
 
@@ -197,7 +199,7 @@ mod tests {
 			.insert_header((header::CONTENT_LENGTH, 1))
 			.set_payload(data)
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
 
@@ -208,7 +210,7 @@ mod tests {
 			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
 			.set_payload(data)
 			.to_http_parts();
-		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload).await;
+		let msgpack = MsgPackMessage::<Data>::new(&req, &mut payload, None).await;
 
 		assert_eq!(msgpack.ok().unwrap(), Data { payload: true });
 	}
@@ -289,5 +291,54 @@ mod tests {
 		let response = call_service(&app, request).await;
 
 		assert_eq!(response.status(), StatusCode::NOT_ACCEPTABLE);
+	}
+
+	#[actix_web::test]
+	async fn check_custom_content_type() {
+		async fn service(_: MsgPack<Data>) -> HttpResponse {
+			HttpResponse::Ok().finish()
+		}
+
+		let payload =
+			Bytes::from_static(&[0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]);
+
+		let mut config = MsgPackConfig::default();
+		config.content_type(|mime_type| mime_type == APPLICATION_JSON);
+
+		let app =
+			init_service(App::new().app_data(config).route("/", web::post().to(service))).await;
+
+		let request = TestRequest::default()
+			.method(Method::POST)
+			.set_payload(payload)
+			.insert_header((header::CONTENT_TYPE, APPLICATION_JSON))
+			.to_request();
+		let response = call_service(&app, request).await;
+
+		assert_eq!(response.status(), StatusCode::OK);
+	}
+
+	#[actix_web::test]
+	async fn check_default_content_type() {
+		async fn service(_: MsgPack<Data>) -> HttpResponse {
+			HttpResponse::Ok().finish()
+		}
+
+		let payload =
+			Bytes::from_static(&[0x81, 0xa7, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0xc3]);
+
+		let config = MsgPackConfig::default();
+
+		let app =
+			init_service(App::new().app_data(config).route("/", web::post().to(service))).await;
+
+		let request = TestRequest::default()
+			.method(Method::POST)
+			.set_payload(payload)
+			.insert_header((header::CONTENT_TYPE, APPLICATION_MSGPACK))
+			.to_request();
+		let response = call_service(&app, request).await;
+
+		assert_eq!(response.status(), StatusCode::OK);
 	}
 }
