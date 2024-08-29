@@ -1,4 +1,4 @@
-use crate::{MsgPackError, DEFAULT_PAYLOAD_LIMIT};
+use crate::{ContentTypeHandler, MsgPackError, DEFAULT_PAYLOAD_LIMIT};
 use actix_web::{
 	dev::Payload, error::PayloadError, http::header::CONTENT_LENGTH, web::BytesMut, HttpMessage,
 	HttpRequest,
@@ -22,8 +22,23 @@ pub struct MsgPackMessage<T> {
 }
 
 impl<T> MsgPackMessage<T> {
-	pub fn new(req: &HttpRequest, payload: &mut Payload) -> Self {
-		if req.content_type() != APPLICATION_MSGPACK {
+	pub fn new(
+		req: &HttpRequest,
+		payload: &mut Payload,
+		content_type_fn: Option<ContentTypeHandler>,
+	) -> Self {
+		// Check content-type header
+		let can_parse = if let Ok(Some(mime_type)) = req.mime_type() {
+			if let Some(predicate) = content_type_fn {
+				predicate(mime_type)
+			} else {
+				mime_type == APPLICATION_MSGPACK
+			}
+		} else {
+			false
+		};
+
+		if !can_parse {
 			return MsgPackMessage {
 				limit: DEFAULT_PAYLOAD_LIMIT,
 				length: None,

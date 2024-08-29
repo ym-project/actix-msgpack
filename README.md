@@ -54,6 +54,8 @@ async fn main() -> std::io::Result<()> {
         config.error_handler(|err, _req| {
             InternalError::from_response(err, HttpResponse::BadRequest().finish()).into()
         });
+        // set allowed content-type (default is application/msgpack)
+        config.content_type(|mime_type| mime_type == mime::APPLICATION_JSON)
 
         App::new().app_data(Data::new(msgpack_config)).service(index)
     })

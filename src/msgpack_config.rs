@@ -1,16 +1,18 @@
 use super::{ErrorHandler, DEFAULT_PAYLOAD_LIMIT};
-use crate::MsgPackError;
+use crate::{ContentTypeHandler, MsgPackError};
 use actix_web::{error::Error, HttpRequest};
+use mime::Mime;
 use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct MsgPackConfig {
 	pub(crate) limit: usize,
 	pub(crate) error_handler: Option<ErrorHandler>,
+	pub(crate) content_type: Option<ContentTypeHandler>,
 }
 
 pub const DEFAULT_CONFIG: MsgPackConfig =
-	MsgPackConfig { limit: DEFAULT_PAYLOAD_LIMIT, error_handler: None };
+	MsgPackConfig { limit: DEFAULT_PAYLOAD_LIMIT, error_handler: None, content_type: None };
 
 impl MsgPackConfig {
 	/// Set maximum accepted payload size in bytes. The default limit is 256KiB.
@@ -24,6 +26,15 @@ impl MsgPackConfig {
 		F: Fn(MsgPackError, &HttpRequest) -> Error + Send + Sync + 'static,
 	{
 		self.error_handler = Some(Arc::new(handler));
+		self
+	}
+
+	/// Set content type of the request. The default content type is application/msgpack.
+	pub fn content_type<F>(&mut self, handler: F) -> &mut Self
+	where
+		F: Fn(Mime) -> bool + Send + Sync + 'static,
+	{
+		self.content_type = Some(Arc::new(handler));
 		self
 	}
 }

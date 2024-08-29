@@ -57,10 +57,11 @@ where
 		let config = req.app_data::<MsgPackConfig>().unwrap_or(&DEFAULT_CONFIG);
 		let limit = config.limit;
 		let err_handler = config.error_handler.clone();
+		let content_type = config.content_type.clone();
 
 		MsgPackExtractorFuture {
 			req: req.clone(),
-			fut: MsgPackMessage::new(req, payload).limit(limit),
+			fut: MsgPackMessage::new(req, payload, content_type).limit(limit),
 			err_handler,
 		}
 	}
