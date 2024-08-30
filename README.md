@@ -57,7 +57,7 @@ async fn main() -> std::io::Result<()> {
         // set allowed content-type (default is application/msgpack)
         config.content_type(|mime_type| mime_type == mime::APPLICATION_JSON)
 
-        App::new().app_data(Data::new(msgpack_config)).service(index)
+        App::new().app_data(Data::new(config)).service(index)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
