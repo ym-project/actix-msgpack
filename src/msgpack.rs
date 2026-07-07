@@ -1,5 +1,5 @@
-use crate::MsgPackExtractorFuture;
 use super::{MsgPackConfig, MsgPackError, MsgPackMessage, DEFAULT_CONFIG};
+use crate::MsgPackExtractorFuture;
 use actix_web::{
 	body::BoxBody, dev::Payload, error::Error, FromRequest, HttpRequest, HttpResponse, Responder,
 };
