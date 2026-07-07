@@ -5,23 +5,23 @@ use rmp_serde::{decode::Error as RmpSerdeDecodeError, encode::Error as RmpSerdeE
 #[derive(Debug, Display)]
 pub enum MsgPackError {
 	/// Payload size is bigger than limit
-	#[display(fmt = "Payload size is bigger than limit")]
+	#[display("Payload size is bigger than limit")]
 	Overflow,
 
 	/// Content type error
-	#[display(fmt = "Content type error")]
+	#[display("Content type error")]
 	ContentType,
 
 	/// Deserialize error
-	#[display(fmt = "Deserialize error: {_0}")]
+	#[display("Deserialize error: {_0}")]
 	Deserialize(RmpSerdeDecodeError),
 
 	/// Serialize error
-	#[display(fmt = "Serialize error: {_0}")]
+	#[display("Serialize error: {_0}")]
 	Serialize(RmpSerdeEncodeError),
 
 	/// Payload error
-	#[display(fmt = "Error that occur during reading payload: {_0}")]
+	#[display("Error that occur during reading payload: {_0}")]
 	Payload(PayloadError),
 }
 
